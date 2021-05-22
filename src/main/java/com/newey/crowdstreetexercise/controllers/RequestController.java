@@ -18,6 +18,9 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
+import java.time.OffsetDateTime;
+
 @RestController
 public class RequestController {
     private static final Logger log = LoggerFactory.getLogger(RequestController.class);
@@ -27,35 +30,57 @@ public class RequestController {
 
     @RequestMapping(path = "/request", method = RequestMethod.POST)
     public ResponseEntity<String> postReqeust(@RequestBody final String req) {
-        // Normally, I would accept a DTO that matches the expected json. This would provide the advantage of
-        // allowing Spring to enforce the shape of the json object that is passed in but I don't want to go into setting
-        // up Jackson marshalling in Spring (maybe it's not that hard but I don't want to take the time). Besides, I'll
-        // just do the json shape enforcement myself below when I parse it with Jackson.
+        // Normally, I would specify a specific DTO as the @RequestBody parameter that matches the expected json.
+        // Doing so provides the advantage of allowing Spring to enforce the shape of the json object that is passed in
+        // but I don't want to go into setting up Jackson marshalling in Spring (maybe it's not that hard but I don't
+        // want to take the time). Besides, I'll just do the json shape enforcement myself below when I parse it with
+        // Jackson.
         try {
             ObjectMapper jsonMapper = new ObjectMapper();
             RequestDto requestDto = jsonMapper.readValue(req, RequestDto.class);
             // In real life, I would never do this. I would put the crud methods in a service where I could control
-            // the transaction.
-            RequestEntity entity = repository.save(new RequestEntity(requestDto.getBody()));
+            // the transaction. Also, the service would take care of setting create/update timestamps. An even approach
+            // would be to extend the repository, overriding the save() method so that create/update timestamps are
+            // updated correctly at the time of the save/update.
+            RequestEntity entity = new RequestEntity(requestDto.getBody());
+            OffsetDateTime now = OffsetDateTime.now();
+            entity.setCreatedDate(now);
+            entity.setLastUpdateDate(now);
+            entity = repository.save(entity);
 
-            // Make callout to the third-party service. This could be accomplished by using the Apache HttpClient library
-            // or jaxrs of something like that.
             requestDto.setCallback("/callback/" + entity.getId());
-            // Send the above dto to the third-party URL. I assume it should be a POST since we are sending json data
-            // in the body, but the instructions don't say how we should call the third-party url.
+            String returnMessage = callThirdPartyEndpoint(requestDto);
 
-            return new ResponseEntity<>("SUCCESS", HttpStatus.OK);
+            return new ResponseEntity<>(returnMessage, HttpStatus.OK);
         }
         catch (JsonProcessingException e) {
             // Bad json data.
-            log.error("Exception parsing reqeust body: " + req + " -- Exception: " + e.getMessage(), e);
+            log.error("Exception parsing request body: " + req + " -- Exception: " + e.getMessage(), e);
             return new ResponseEntity<>("ERROR: Bad json payload", HttpStatus.BAD_REQUEST);
+        }
+        catch (Exception e) {
+            log.error("Exception handling POST request /request body: " + req + " -- Exception: " + e.getMessage(), e);
+            return new ResponseEntity<>("ERROR: unknown error", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
+    private String callThirdPartyEndpoint(RequestDto dto) {
+        // Make callout to the third-party service. This could be accomplished by using the Apache HttpClient library
+        // or Spring's RestTemplate or WebClient or jax-rs or something like that. There are a number of options.
+
+        // Send the above dto to the third-party URL. I assume it should be a POST since we are sending json data
+        // in the body, but the instructions don't say which verb should be used to call the third-party url.
+
+        // The call-out to the third-party endpoint would of course have to do error checking, checking response code,
+        // etc. The directions don't specify what should be returned to the user but I would assume that if we detect an
+        // error from the third-party endpoint, we would return an error to the caller of the /request endpoint.
+        return "SUCCESS";
+    }
+
     @RequestMapping(path = "/callback/{id}", method = RequestMethod.PUT)
-    public void handleCallback(@PathVariable final Integer id, @RequestBody String body, ServerHttpResponse response) {
-        // Spring does the heavy lifting for us here, assureing that the id is an Integer.
+    public void handleCallback(@PathVariable final Integer id, @RequestBody String body, HttpServletResponse response) {
+        // Spring does the heavy validation lifting for us here, assuring that the id is an Integer.
+        // Also see the comment in the /request endpoint above about the @RequestBody parameter.
         RequestEntity entity = repository.findById(id);
         if (null != entity) {
             ObjectMapper jsonMapper = new ObjectMapper();
@@ -63,23 +88,31 @@ public class RequestController {
                 ThirdPartyStatusDto statusDto = jsonMapper.readValue(body, ThirdPartyStatusDto.class);
                 // In real life, I would never do this. I would put the crud methods in a service where I could control
                 // the transaction.
-                entity.setStatus(statusDto.getStatus());
+                if (null != statusDto.getStatus()) {
+                    entity.setStatus(RequestEntity.Status.valueOf(statusDto.getStatus().name()));
+                }
                 entity.setDetail(statusDto.getDetail());
+                // Once again, in the real world this save would be handled in a service class or in a repository
+                // extension so that the update time is guaranteed to be set.
+                entity.setLastUpdateDate(OffsetDateTime.now());
                 repository.save(entity);
             }
             catch (JsonProcessingException e) {
                 log.error("Exception parsing reqeust body: " + body + " -- Exception: " + e.getMessage(), e);
             }
         }
-        // The instructions say we have to return a 203 response, no matter what. I assume that means that even if
-        // we have an error...
-        response.setStatusCode(HttpStatus.NO_CONTENT);
+        // The instructions say we have to return a 204 response, no matter what. I assume that means that even if
+        // we have an error or if the id is not found in our database...
+        response.setStatus(HttpStatus.NO_CONTENT.value());
     }
 
     @RequestMapping(path = "/status/{id}", method = RequestMethod.GET)
     public ResponseEntity<StatusDto> getStatus(@PathVariable Integer id) {
-        // Spring does the heavy lifting for us here, assureing that the id is an Integer.
+        // Spring does the heavy validation lifting for us here, assuring that the id is an Integer.
         RequestEntity entity = repository.findById(id);
-        return new ResponseEntity<>(new StatusDto(entity.getBody(), entity.getStatus(), entity.getDetail()), HttpStatus.OK);
+        if (null != entity) {
+            return new ResponseEntity<>(new StatusDto(entity), HttpStatus.OK);
+        }
+        return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
     }
 }

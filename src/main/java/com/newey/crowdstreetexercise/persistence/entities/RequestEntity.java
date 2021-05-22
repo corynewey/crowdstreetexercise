@@ -1,16 +1,23 @@
 package com.newey.crowdstreetexercise.persistence.entities;
 
 import javax.persistence.*;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "REQUEST")
 public class RequestEntity {
+    public enum Status {
+        PROCESSED, COMPLETED, ERROR
+    }
+
     @Id
     @GeneratedValue(strategy=GenerationType.SEQUENCE)
     private Integer id;
     private String body;
-    private String status;
+    private Status status;
     private String detail;
+    private OffsetDateTime createdDate;
+    private OffsetDateTime lastUpdateDate;
 
     protected RequestEntity() { }
 
@@ -18,7 +25,7 @@ public class RequestEntity {
         this.body = body;
     }
 
-    public RequestEntity(String body, String status, String detail) {
+    public RequestEntity(String body, Status status, String detail) {
         this.body = body;
         this.status = status;
         this.detail = detail;
@@ -45,11 +52,11 @@ public class RequestEntity {
         this.body = body;
     }
 
-    public String getStatus() {
+    public Status getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Status status) {
         this.status = status;
     }
 
@@ -59,5 +66,21 @@ public class RequestEntity {
 
     public void setDetail(String detail) {
         this.detail = detail;
+    }
+
+    public OffsetDateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(OffsetDateTime createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    public OffsetDateTime getLastUpdateDate() {
+        return lastUpdateDate;
+    }
+
+    public void setLastUpdateDate(OffsetDateTime lastUpdateDate) {
+        this.lastUpdateDate = lastUpdateDate;
     }
 }
