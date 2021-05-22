@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.newey.crowdstreetexercise.CrowdstreetexerciseApplication;
 import com.newey.crowdstreetexercise.dto.RequestDto;
+import com.newey.crowdstreetexercise.dto.RequestResultDto;
 import com.newey.crowdstreetexercise.dto.StatusDto;
 import com.newey.crowdstreetexercise.dto.ThirdPartyStatusDto;
 import com.newey.crowdstreetexercise.persistence.entities.RequestEntity;
@@ -28,8 +29,10 @@ public class RequestController {
     @Autowired
     private RequestRepository repository;
 
+    // I know that the instructions say that this endpoint should return a string, but we need to return the request
+    // id so I'm going to do it in JSON. Hey, it's still a string, right?
     @RequestMapping(path = "/request", method = RequestMethod.POST)
-    public ResponseEntity<String> postReqeust(@RequestBody final String req) {
+    public ResponseEntity<RequestResultDto> postReqeust(@RequestBody final String req) {
         // Normally, I would specify a specific DTO as the @RequestBody parameter that matches the expected json.
         // Doing so provides the advantage of allowing Spring to enforce the shape of the json object that is passed in
         // but I don't want to go into setting up Jackson marshalling in Spring (maybe it's not that hard but I don't
@@ -51,16 +54,16 @@ public class RequestController {
             requestDto.setCallback("/callback/" + entity.getId());
             String returnMessage = callThirdPartyEndpoint(requestDto);
 
-            return new ResponseEntity<>(returnMessage, HttpStatus.OK);
+            return new ResponseEntity<>(new RequestResultDto(returnMessage, entity.getId()), HttpStatus.OK);
         }
         catch (JsonProcessingException e) {
             // Bad json data.
             log.error("Exception parsing request body: " + req + " -- Exception: " + e.getMessage(), e);
-            return new ResponseEntity<>("ERROR: Bad json payload", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new RequestResultDto("ERROR: Bad json payload", -1), HttpStatus.BAD_REQUEST);
         }
         catch (Exception e) {
             log.error("Exception handling POST request /request body: " + req + " -- Exception: " + e.getMessage(), e);
-            return new ResponseEntity<>("ERROR: unknown error", HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new RequestResultDto("ERROR: unknown error", -1), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

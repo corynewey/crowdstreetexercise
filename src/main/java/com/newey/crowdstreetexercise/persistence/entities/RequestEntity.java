@@ -7,7 +7,7 @@ import java.time.OffsetDateTime;
 @Table(name = "REQUEST")
 public class RequestEntity {
     public enum Status {
-        PROCESSED, COMPLETED, ERROR
+        STARTED, PROCESSED, COMPLETED, ERROR
     }
 
     @Id
