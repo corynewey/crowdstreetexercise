@@ -6,6 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.newey.crowdstreetexercise.controllers.RequestController;
 import com.newey.crowdstreetexercise.dto.RequestDto;
+import com.newey.crowdstreetexercise.dto.RequestResultDto;
 import com.newey.crowdstreetexercise.dto.StatusDto;
 import com.newey.crowdstreetexercise.dto.ThirdPartyStatusDto;
 import com.newey.crowdstreetexercise.persistence.entities.RequestEntity;
@@ -72,7 +73,9 @@ class CrowdstreetexerciseApplicationTests {
 												  .andReturn()
 												  .getResponse();
 		assertThat(response.getStatus()).isEqualTo(200);
-		assertThat(response.getContentAsString()).isEqualTo("SUCCESS");
+		RequestResultDto resultDto = jsonMapper.readValue(response.getContentAsString(), RequestResultDto.class);
+		assertThat(resultDto.getStatus()).isEqualTo("SUCCESS");
+		assertThat(resultDto.getId()).isGreaterThan(0);
 
 		// Make sure that the controller saved a new RequestEntity
 		RequestEntity entity = getRequestEntityWithBody(testBody);
@@ -93,7 +96,9 @@ class CrowdstreetexerciseApplicationTests {
 												  .andReturn()
 												  .getResponse();
 		assertThat(response.getStatus()).isEqualTo(400);
-		assertThat(response.getContentAsString()).isEqualTo("ERROR: Bad json payload");
+		RequestResultDto resultDto = jsonMapper.readValue(response.getContentAsString(), RequestResultDto.class);
+		assertThat(resultDto.getStatus()).isEqualTo("ERROR: Bad json payload");
+		assertThat(resultDto.getId()).isEqualTo(-1);
 
 		// Get the number of RequestEntities in the database before the call.
 		List<RequestEntity> createdEntitiesAfter = repository.findAll();
@@ -117,7 +122,9 @@ class CrowdstreetexerciseApplicationTests {
 												  .andReturn()
 												  .getResponse();
 		assertThat(response.getStatus()).isEqualTo(200);
-		assertThat(response.getContentAsString()).isEqualTo("SUCCESS");
+		RequestResultDto resultDto = jsonMapper.readValue(response.getContentAsString(), RequestResultDto.class);
+		assertThat(resultDto.getStatus()).isEqualTo("SUCCESS");
+		assertThat(resultDto.getId()).isGreaterThan(0);
 
 		// Get the new entity.
 		RequestEntity entity = getRequestEntityWithBody(testBody);
@@ -210,7 +217,9 @@ class CrowdstreetexerciseApplicationTests {
 												  .andReturn()
 												  .getResponse();
 		assertThat(response.getStatus()).isEqualTo(200);
-		assertThat(response.getContentAsString()).isEqualTo("SUCCESS");
+		RequestResultDto resultDto = jsonMapper.readValue(response.getContentAsString(), RequestResultDto.class);
+		assertThat(resultDto.getStatus()).isEqualTo("SUCCESS");
+		assertThat(resultDto.getId()).isGreaterThan(0);
 
 		// Get the new entity.
 		RequestEntity entity = getRequestEntityWithBody(testBody);

@@ -2,21 +2,17 @@ package com.newey.crowdstreetexercise.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.newey.crowdstreetexercise.CrowdstreetexerciseApplication;
 import com.newey.crowdstreetexercise.dto.RequestDto;
 import com.newey.crowdstreetexercise.dto.RequestResultDto;
 import com.newey.crowdstreetexercise.dto.StatusDto;
 import com.newey.crowdstreetexercise.dto.ThirdPartyStatusDto;
 import com.newey.crowdstreetexercise.persistence.entities.RequestEntity;
 import com.newey.crowdstreetexercise.persistence.repository.RequestRepository;
-import com.sun.deploy.net.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.server.ServerHttpResponse;
-import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
