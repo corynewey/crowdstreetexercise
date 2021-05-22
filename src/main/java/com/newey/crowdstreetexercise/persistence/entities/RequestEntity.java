@@ -9,18 +9,24 @@ public class RequestEntity {
     @GeneratedValue(strategy=GenerationType.SEQUENCE)
     private Integer id;
     private String body;
-    private String callbackurl;
+    private String status;
+    private String detail;
 
     protected RequestEntity() { }
 
-    public RequestEntity(String body, String callbackUrl) {
+    public RequestEntity(String body) {
         this.body = body;
-        this.callbackurl = callbackUrl;
+    }
+
+    public RequestEntity(String body, String status, String detail) {
+        this.body = body;
+        this.status = status;
+        this.detail = detail;
     }
 
     @Override
     public String toString() {
-        return "Request[id=" + this.id + ", body='" + this.body + "', callbackUrl='" + this.callbackurl + "']";
+        return "Request[id=" + this.id + ", body='" + this.body + "']";
     }
 
     public Integer getId() {
@@ -39,11 +45,19 @@ public class RequestEntity {
         this.body = body;
     }
 
-    public String getCallbackurl() {
-        return callbackurl;
+    public String getStatus() {
+        return status;
     }
 
-    public void setCallbackurl(String callbackUrl) {
-        this.callbackurl = callbackUrl;
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getDetail() {
+        return detail;
+    }
+
+    public void setDetail(String detail) {
+        this.detail = detail;
     }
 }

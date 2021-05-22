@@ -22,8 +22,8 @@ public class CrowdstreetexerciseApplication {
 	public CommandLineRunner demo(RequestRepository repository) {
 		return (args) -> {
 			// Save a couple Requests
-			repository.save(new RequestEntity("This is body 1", "http://www.nowhere.com"));
-			repository.save(new RequestEntity("This is body 2", "http://www.righthere.com"));
+			repository.save(new RequestEntity("This is body 1", "SUCCESS", "Detail one."));
+			repository.save(new RequestEntity("This is body 2", "ERROR", "Detail two."));
 			log.info("Requests found with findAll():");
 			log.info("------------------------------");
 			for (RequestEntity request : repository.findAll()) {
