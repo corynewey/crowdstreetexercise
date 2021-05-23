@@ -32,7 +32,7 @@ The build creates an executable jar so just start it up with this command line:
 Enjoy...
 
 
-#Architecture notes
+# Architecture notes
 
 I chose to do this assignment in Spring Boot partly because Spring handles much of the load
 with respect to error handling. The classes of errors that can occur are mainly these:
