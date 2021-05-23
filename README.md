@@ -30,3 +30,29 @@ The build creates an executable jar so just start it up with this command line:
 
 
 Enjoy...
+
+
+#Architecture notes
+
+I chose to do this assignment in Spring Boot partly because Spring handles much of the load
+with respect to error handling. The classes of errors that can occur are mainly these:
+* Validation
+* Network
+* Bugs in the code
+
+*__Validation__* While Spring can validate all types of incoming parameters, I chose to only have it validate simple
+types like Integer. I chose to do it that way because I didn't want to take the time to set up Jackson
+to marshall all incoming parameters. So for the JSON objects, I'm doing the validation by parsing the
+incoming String myself into a Java object. If the String doesn't parse, it is invalid JSON.
+
+*__Network__* I would check the HTTP status of the third-party call if the code were actually making
+the call (the directions said to not make the call, just stub it out). However, if some network
+problem occurred that I wasn't handling, an exception would be thrown and Spring would return a 400
+HTTP error code. So callers will always know if an error occurred.
+
+*__Bugs__* Once again, if a bug in the code causes an error, it will usually manifest in an exception
+which, as stated above, will cause Spring to return an HTTP error code.
+
+
+In the interest of time, I have simplified my approach and not implemented some things that I normally would (service classes
+in particular).
